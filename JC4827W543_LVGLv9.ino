@@ -133,7 +133,7 @@ void setup()
     lv_indev_set_read_cb(indev, my_touchpad_read);
 
     // Create a label to see if everything is working
-    lv_obj_t *label = lv_label_create(lv_scr_act());
+    lv_obj_t *label = lv_label_create(lv_screen_active());
     lv_label_set_text(label, "Hello Arduino, I'm LVGL!(V" GFX_STR(LVGL_VERSION_MAJOR) "." GFX_STR(LVGL_VERSION_MINOR) "." GFX_STR(LVGL_VERSION_PATCH) ")");
     lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
   }
