@@ -1,10 +1,11 @@
 // LVGLv9 for the JC4827W543 development board
 // Use board "ESP32S3 Dev Module" from esp32 Arduino Core by Espressif (last tested on v3.2.0)
+// Do not forget to configure to setup and configure lv_conf.h : https://docs.lvgl.io/master/get-started/platforms/arduino.html
 
-#include <lvgl.h> // Install "lvgl" with the Library Manager (last tested on v9.2.2)           
+#include <lvgl.h>            // Install "lvgl" with the Library Manager (last tested on v9.2.2)
 #include <PINS_JC4827W543.h> // Install "GFX Library for Arduino" with the Library Manager (last tested on v1.5.6)
                              // Install "Dev Device Pins" with the Library Manager (last tested on v0.0.2)
-#include "TAMC_GT911.h"         // Install "TAMC_GT911" with the Library Manager (last tested on v1.0.2)
+#include "TAMC_GT911.h"      // Install "TAMC_GT911" with the Library Manager (last tested on v1.0.2)
 // Touch Controller
 #define TOUCH_SDA 8
 #define TOUCH_SCL 4
@@ -14,27 +15,28 @@
 #define TOUCH_HEIGHT 272
 TAMC_GT911 touchController = TAMC_GT911(TOUCH_SDA, TOUCH_SCL, TOUCH_INT, TOUCH_RST, TOUCH_WIDTH, TOUCH_HEIGHT);
 
+// Display global variables
 uint32_t screenWidth;
 uint32_t screenHeight;
 uint32_t bufSize;
 lv_display_t *disp;
 lv_color_t *disp_draw_buf;
 
-#if LV_USE_LOG != 0
+// LVGL calls this function to print log information
 void my_print(lv_log_level_t level, const char *buf)
 {
   LV_UNUSED(level);
   Serial.println(buf);
   Serial.flush();
 }
-#endif
 
+// LVGL calls this function to retrieve elapsed time
 uint32_t millis_cb(void)
 {
   return millis();
 }
 
-/* LVGL calls it when a rendered image needs to copied to the display*/
+// LVGL calls this function when a rendered image needs to copied to the display
 void my_disp_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map)
 {
 #ifndef DIRECT_MODE
@@ -48,18 +50,22 @@ void my_disp_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map)
   lv_disp_flush_ready(disp);
 }
 
-/*Read the touchpad*/
-void my_touchpad_read(lv_indev_t * indev, lv_indev_data_t * data) {
+// LVGL calls this function to read the touchpad
+void my_touchpad_read(lv_indev_t *indev, lv_indev_data_t *data)
+{
   // Update the touch data from the GT911 touch controller
   touchController.read();
-  
+
   // If a touch is detected, update the LVGL data structure with the first point's coordinates.
-  if (touchController.isTouched && touchController.touches > 0) {
-      data->point.x = touchController.points[0].x;
-      data->point.y = touchController.points[0].y;
-      data->state = LV_INDEV_STATE_PRESSED;  // Touch is pressed
-  } else {
-      data->state = LV_INDEV_STATE_RELEASED; // No touch detected
+  if (touchController.isTouched && touchController.touches > 0)
+  {
+    data->point.x = touchController.points[0].x;
+    data->point.y = touchController.points[0].y;
+    data->state = LV_INDEV_STATE_PRESSED; // Touch is pressed
+  }
+  else
+  {
+    data->state = LV_INDEV_STATE_RELEASED; // No touch detected
   }
 }
 
@@ -70,8 +76,6 @@ void setup()
 #endif
 
   Serial.begin(115200);
-  // Serial.setDebugOutput(true);
-  // while(!Serial);
   Serial.println("Arduino_GFX LVGL_Arduino_v9 example ");
   String LVGL_Arduino = String('V') + lv_version_major() + "." + lv_version_minor() + "." + lv_version_patch();
   Serial.println(LVGL_Arduino);
@@ -80,6 +84,10 @@ void setup()
   if (!gfx->begin())
   {
     Serial.println("gfx->begin() failed!");
+    while (true)
+    {
+      /* no need to continue */
+    }
   }
   // Set the backlight of the screen to High intensity
   pinMode(GFX_BL, OUTPUT);
@@ -90,12 +98,13 @@ void setup()
   touchController.begin();
   touchController.setRotation(ROTATION_INVERTED); // Change as needed
 
+  // init LVGL
   lv_init();
 
-  /*Set a tick source so that LVGL will know how much time elapsed. */
+  // Set a tick source so that LVGL will know how much time elapsed
   lv_tick_set_cb(millis_cb);
 
-  /* register print function for debugging */
+  // register print function for debugging
 #if LV_USE_LOG != 0
   lv_log_register_print_cb(my_print);
 #endif
@@ -109,21 +118,12 @@ void setup()
   bufSize = screenWidth * 40;
 #endif
 
-#ifdef ESP32
-#if defined(DIRECT_MODE) && (defined(CANVAS) || defined(RGB_PANEL) || defined(DSI_PANEL))
-  disp_draw_buf = (lv_color_t *)gfx->getFramebuffer();
-#else  // !(defined(DIRECT_MODE) && (defined(CANVAS) || defined(RGB_PANEL) || defined(DSI_PANEL)))
   disp_draw_buf = (lv_color_t *)heap_caps_malloc(bufSize * 2, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
   if (!disp_draw_buf)
   {
     // remove MALLOC_CAP_INTERNAL flag try again
     disp_draw_buf = (lv_color_t *)heap_caps_malloc(bufSize * 2, MALLOC_CAP_8BIT);
   }
-#endif // !(defined(DIRECT_MODE) && (defined(CANVAS) || defined(RGB_PANEL) || defined(DSI_PANEL)))
-#else  // !ESP32
-  Serial.println("LVGL disp_draw_buf heap_caps_malloc failed! malloc again...");
-  disp_draw_buf = (lv_color_t *)malloc(bufSize * 2);
-#endif // !ESP32
   if (!disp_draw_buf)
   {
     Serial.println("LVGL disp_draw_buf allocate failed!");
@@ -138,13 +138,10 @@ void setup()
     lv_display_set_buffers(disp, disp_draw_buf, NULL, bufSize * 2, LV_DISPLAY_RENDER_MODE_PARTIAL);
 #endif
 
-    /*Initialize the (dummy) input device driver*/
-    // lv_indev_t *indev = lv_indev_create();
-    // lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER); /*Touchpad should have POINTER type*/
-    // lv_indev_set_read_cb(indev, my_touchpad_read);
-    lv_indev_t * indev = lv_indev_create();        /* Create input device connected to Default Display. */
-    lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);   /* Touch pad is a pointer-like device. */
-    lv_indev_set_read_cb(indev, my_touchpad_read);    /* Set driver function. */
+    // Create input device (touchpad of the JC4827W543)
+    lv_indev_t *indev = lv_indev_create();
+    lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
+    lv_indev_set_read_cb(indev, my_touchpad_read);
 
     /* Option 1: Create a simple label
      * ---------------------
