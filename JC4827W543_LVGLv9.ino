@@ -66,18 +66,30 @@ void my_touchpad_read(lv_indev_t *indev, lv_indev_data_t *data)
   }
 }
 
-static void btn_event_cb(lv_event_t * e)
+static void btn_event_cb(lv_event_t *e)
 {
-    lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t * btn = (lv_obj_t *)lv_event_get_target(e);
-    if(code == LV_EVENT_CLICKED) {
-        static uint8_t cnt = 0;
-        cnt++;
+  lv_event_code_t code = lv_event_get_code(e);
+  lv_obj_t *btn = (lv_obj_t *)lv_event_get_target(e);
+  if (code == LV_EVENT_CLICKED)
+  {
+    static uint8_t cnt = 0;
+    cnt++;
 
-        /*Get the first child of the button which is the label and change its text*/
-        lv_obj_t * label = lv_obj_get_child(btn, 0);
-        lv_label_set_text_fmt(label, "Button: %d", cnt);
-    }
+    /*Get the first child of the button which is the label and change its text*/
+    lv_obj_t *label = lv_obj_get_child(btn, 0);
+    lv_label_set_text_fmt(label, "Button: %d", cnt);
+  }
+}
+
+static void value_changed_event_cb(lv_event_t * e)
+{
+    lv_obj_t * arc = lv_event_get_target_obj(e);
+    lv_obj_t * label = (lv_obj_t *)lv_event_get_user_data(e);
+
+    lv_label_set_text_fmt(label, "%" LV_PRId32 "%%", lv_arc_get_value(arc));
+
+    /*Rotate the label to the current position of the arc*/
+    lv_arc_rotate_obj_to_angle(arc, label, 25);
 }
 
 void setup()
@@ -133,7 +145,6 @@ void setup()
     {
       /* no need to continue */
     }
-    
   }
   else
   {
@@ -147,18 +158,35 @@ void setup()
     lv_indev_set_read_cb(indev, my_touchpad_read);
 
     // Create some widgets to see if everything is working
-    lv_obj_t * title_label = lv_label_create(lv_screen_active());
+    lv_obj_t *title_label = lv_label_create(lv_screen_active());
     lv_label_set_text(title_label, "Hello Arduino, I'm LVGL!(V" GFX_STR(LVGL_VERSION_MAJOR) "." GFX_STR(LVGL_VERSION_MINOR) "." GFX_STR(LVGL_VERSION_PATCH) ")");
-    lv_obj_align(title_label, LV_ALIGN_CENTER, 0, 0);
-    
-    lv_obj_t * btn = lv_button_create(lv_screen_active());  /*Add a button to the current screen*/
-    lv_obj_set_pos(btn, 10, 10);                              /*Set its position*/
-    lv_obj_set_size(btn, 120, 50);                            /*Set its size*/
-    lv_obj_add_event_cb(btn, btn_event_cb, LV_EVENT_ALL, NULL);  /*Assign a callback to the button*/
-    
-    lv_obj_t * btn_label = lv_label_create(btn);            /*Add a label to the button*/
-    lv_label_set_text(btn_label, "Button");                 /*Set the label's text*/
+    lv_obj_align(title_label, LV_ALIGN_BOTTOM_MID, 0, 0);
+
+    // Button Widget
+    lv_obj_t *btn = lv_button_create(lv_screen_active());       /*Add a button to the current screen*/
+    lv_obj_set_pos(btn, 10, 10);                                /*Set its position*/
+    lv_obj_set_size(btn, 120, 50);                              /*Set its size*/
+    lv_obj_add_event_cb(btn, btn_event_cb, LV_EVENT_ALL, NULL); /*Assign a callback to the button*/
+
+    lv_obj_t *btn_label = lv_label_create(btn); /*Add a label to the button*/
+    lv_label_set_text(btn_label, "Button");     /*Set the label's text*/
     lv_obj_center(btn_label);
+
+    // Arc Widget
+    lv_obj_t * label = lv_label_create(lv_screen_active());
+
+    lv_obj_t *arc = lv_arc_create(lv_screen_active());
+    lv_obj_set_size(arc, 150, 150);
+    lv_arc_set_rotation(arc, 135);
+    lv_arc_set_bg_angles(arc, 0, 270);
+    lv_arc_set_value(arc, 10);
+    lv_obj_center(arc);
+    lv_obj_add_event_cb(arc, value_changed_event_cb, LV_EVENT_VALUE_CHANGED, label);
+
+    /*Manually update the label for the first time*/
+    lv_obj_send_event(arc, LV_EVENT_VALUE_CHANGED, NULL);
+
+    // Switch Widget
     
   }
 
