@@ -39,14 +39,11 @@ uint32_t millis_cb(void)
 // LVGL calls this function when a rendered image needs to copied to the display
 void my_disp_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map)
 {
-#ifndef DIRECT_MODE
   uint32_t w = lv_area_get_width(area);
   uint32_t h = lv_area_get_height(area);
 
   gfx->draw16bitRGBBitmap(area->x1, area->y1, (uint16_t *)px_map, w, h);
-#endif // #ifndef DIRECT_MODE
 
-  /*Call it to tell LVGL you are ready*/
   lv_disp_flush_ready(disp);
 }
 
@@ -71,10 +68,6 @@ void my_touchpad_read(lv_indev_t *indev, lv_indev_data_t *data)
 
 void setup()
 {
-#ifdef DEV_DEVICE_INIT
-  DEV_DEVICE_INIT();
-#endif
-
   Serial.begin(115200);
   Serial.println("Arduino_GFX LVGL_Arduino_v9 example ");
   String LVGL_Arduino = String('V') + lv_version_major() + "." + lv_version_minor() + "." + lv_version_patch();
@@ -111,12 +104,7 @@ void setup()
 
   screenWidth = gfx->width();
   screenHeight = gfx->height();
-
-#ifdef DIRECT_MODE
-  bufSize = screenWidth * screenHeight;
-#else
   bufSize = screenWidth * 40;
-#endif
 
   disp_draw_buf = (lv_color_t *)heap_caps_malloc(bufSize * 2, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
   if (!disp_draw_buf)
@@ -127,16 +115,17 @@ void setup()
   if (!disp_draw_buf)
   {
     Serial.println("LVGL disp_draw_buf allocate failed!");
+    while (true)
+    {
+      /* no need to continue */
+    }
+    
   }
   else
   {
     disp = lv_display_create(screenWidth, screenHeight);
     lv_display_set_flush_cb(disp, my_disp_flush);
-#ifdef DIRECT_MODE
-    lv_display_set_buffers(disp, disp_draw_buf, NULL, bufSize * 2, LV_DISPLAY_RENDER_MODE_DIRECT);
-#else
     lv_display_set_buffers(disp, disp_draw_buf, NULL, bufSize * 2, LV_DISPLAY_RENDER_MODE_PARTIAL);
-#endif
 
     // Create input device (touchpad of the JC4827W543)
     lv_indev_t *indev = lv_indev_create();
