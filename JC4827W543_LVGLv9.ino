@@ -183,11 +183,8 @@ void setup()
     lv_obj_center(arc);
     lv_obj_add_event_cb(arc, value_changed_event_cb, LV_EVENT_VALUE_CHANGED, label);
 
-    /*Manually update the label for the first time*/
-    lv_obj_send_event(arc, LV_EVENT_VALUE_CHANGED, NULL);
-
-    // Switch Widget
-    
+    // Manually update the label for the first time
+    lv_obj_send_event(arc, LV_EVENT_VALUE_CHANGED, NULL);    
   }
 
   Serial.println("Setup done");
