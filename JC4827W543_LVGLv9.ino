@@ -143,28 +143,10 @@ void setup()
     lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
     lv_indev_set_read_cb(indev, my_touchpad_read);
 
-    /* Option 1: Create a simple label
-     * ---------------------
-     */
+    // Create a label to see if everything is working
     lv_obj_t *label = lv_label_create(lv_scr_act());
     lv_label_set_text(label, "Hello Arduino, I'm LVGL!(V" GFX_STR(LVGL_VERSION_MAJOR) "." GFX_STR(LVGL_VERSION_MINOR) "." GFX_STR(LVGL_VERSION_PATCH) ")");
     lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
-
-    /* Option 2: Try an example. See all the examples
-     *  - Online: https://docs.lvgl.io/master/examples.html
-     *  - Source codes: https://github.com/lvgl/lvgl/tree/master/examples
-     * ----------------------------------------------------------------
-     */
-    // lv_example_btn_1();
-
-    /* Option 3: Or try out a demo. Don't forget to enable the demos in lv_conf.h. E.g. LV_USE_DEMOS_WIDGETS
-     * -------------------------------------------------------------------------------------------
-     */
-    // lv_demo_widgets();
-    // lv_demo_benchmark();
-    // lv_demo_keypad_encoder();
-    // lv_demo_music();
-    // lv_demo_stress();
   }
 
   Serial.println("Setup done");
