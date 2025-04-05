@@ -1,6 +1,6 @@
 // LVGLv9 for the JC4827W543 development board
 // Use board "ESP32S3 Dev Module" from esp32 Arduino Core by Espressif (last tested on v3.2.0)
-// Do not forget to configure to setup and configure lv_conf.h : https://docs.lvgl.io/master/get-started/platforms/arduino.html
+// Do not forget to setup and configure lv_conf.h : https://docs.lvgl.io/master/get-started/platforms/arduino.html
 
 #include <lvgl.h>            // Install "lvgl" with the Library Manager (last tested on v9.2.2)
 #include <PINS_JC4827W543.h> // Install "GFX Library for Arduino" with the Library Manager (last tested on v1.5.6)
