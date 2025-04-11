@@ -1,3 +1,4 @@
+// Tutorial : https://youtu.be/mnOzfRFQJIM
 // LVGLv9 for the JC4827W543 development board
 // Use board "ESP32S3 Dev Module" from esp32 Arduino Core by Espressif (last tested on v3.2.0)
 // Do not forget to setup and configure lv_conf.h : https://docs.lvgl.io/master/get-started/platforms/arduino.html
